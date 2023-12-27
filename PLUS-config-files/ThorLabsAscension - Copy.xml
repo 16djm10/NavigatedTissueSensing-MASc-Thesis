@@ -1,0 +1,76 @@
+<PlusConfiguration version="2.0">
+
+  <DataCollection StartupDelaySec="2.0" >
+    <DeviceSet 
+      Name="PlusServer: ThorLabs spectrometer and tracking"
+      Description="Broadcasting acquired spectrum through OpenIGTLink. First image row contains wavelength value, second image row contains intensities." />
+    <Device
+      Id="VideoDevice" 
+      Type="ThorLabsVideo"
+	  AcquisitionRate="30"
+	  IntegrationTimeSec="0.01"
+	  AveragedItemsForFiltering="20"
+	  > <!-- IntegrationTimeSec default="0.05" --> <!-- AcquisitionRate Default="30" --> <!--  AveragedItemsForFiltering Default="20"-->
+      <DataSources>
+        <DataSource 
+		   Type="Video" 
+		   Id="Video" 
+		   
+		/> <!-- ClipRectangleSize = [0 0 0] -->
+      </DataSources>      
+      <OutputChannels>
+        <OutputChannel Id="VideoStream" VideoDataSourceId="Video" />
+      </OutputChannels>
+    </Device>
+	<Device
+      Id="TrackerDevice" 
+      Type="Ascension3DG" 
+      FilterAcWideNotch="1"
+      ToolReferenceFrame="Tracker" >
+      <DataSources>
+        <DataSource Type="Tool" Id="Probe" PortName="0"  />
+        <!-- <DataSource Type="Tool" Id="Reference" PortName="1"  /> -->
+      </DataSources>
+      <OutputChannels>
+        <OutputChannel Id="TrackerStream" >
+          <DataSource Id="Probe"/>
+          <!-- <DataSource Id="Reference"/> -->
+        </OutputChannel>
+      </OutputChannels>
+    </Device>
+	<Device 
+      Id="TrackedVideoDevice" 
+      Type="VirtualMixer" >
+      <InputChannels>
+        <InputChannel Id="TrackerStream" />
+        <InputChannel Id="VideoStream" />
+      </InputChannels>
+      <OutputChannels>
+        <OutputChannel Id="TrackedVideoStream"/>
+      </OutputChannels>
+    </Device>
+  </DataCollection>
+ 
+  <PlusOpenIGTLinkServer 
+    MaxNumberOfIgtlMessagesToSend="1" 
+    MaxTimeSpentWithProcessingMs="50" 
+    ListeningPort="18944" 
+    SendValidTransformsOnly="true" 
+    OutputChannelId="TrackedVideoStream" > 
+    <DefaultClientInfo> 
+      <MessageTypes> 
+        <Message Type="IMAGE" />
+		<Message Type="TRANSFORM" />
+      </MessageTypes>
+      <ImageNames>
+        <Image Name="Image" EmbeddedTransformToFrame="Image" />
+      </ImageNames>
+	  <TransformNames> 
+        <Transform Name="ProbeToTracker" />
+        <!-- <Transform Name="ReferenceToTracker" /> -->
+	    <!-- <Transform Name="ProbeToReference" /> -->
+      </TransformNames>
+    </DefaultClientInfo>
+  </PlusOpenIGTLinkServer>
+
+</PlusConfiguration>
